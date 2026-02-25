@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    restart: always
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "4443:4443"
+    environment:
+      - PORT=4443
+    depends_on:
+      - backend
+    restart: always
