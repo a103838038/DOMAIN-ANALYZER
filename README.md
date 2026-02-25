@@ -1,3 +1,7 @@
+**繁體中文** | [English](./README.md)
+
+---
+
 # 🌑 DOMAIN ANALYZER PRO
 
 **Advanced Cyber Intelligence & Infrastructure Mapping Tool**
