@@ -153,13 +153,35 @@ button:hover {
   border-radius: 32px;
   border: 1px solid var(--border-color);
   box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 0.8);
-  margin-top: 40px;
   overflow: hidden;
+}
+
+.card-header {
+  padding: 20px 25px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card-header h3 {
+  margin: 0;
+  color: var(--primary);
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ns-icon {
+  color: var(--secondary);
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+  word-wrap: break-word;
 }
 
 th {

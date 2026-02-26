@@ -107,20 +107,51 @@ async def resolve_dns_only(sub: str, domain: str):
         except:
             return None
 
+async def resolve_domain_only(target: str):
+    async with dns_semaphore:
+        try:
+            loop = asyncio.get_event_loop()
+            resolver = dns.resolver.Resolver()
+            resolver.timeout = 1
+            resolver.lifetime = 1
+            answers = await loop.run_in_executor(None, lambda: resolver.resolve(target, "A"))
+            return {"domain": target, "ip": str(answers[0])}
+        except:
+            return None
+
+async def resolve_ns(domain: str):
+    try:
+        loop = asyncio.get_event_loop()
+        resolver = dns.resolver.Resolver()
+        resolver.timeout = 2
+        resolver.lifetime = 2
+        answers = await loop.run_in_executor(None, lambda: resolver.resolve(domain, "NS"))
+        return [str(r.target).rstrip(".") for r in answers]
+    except:
+        return []
+
 @app.get("/api/scan/{domain}")
 async def scan_subdomains(domain: str):
     start_time = time.time()
     
+    ns_domains = await resolve_ns(domain)
+    ns_dns_tasks = [resolve_domain_only(ns) for ns in ns_domains]
+    
     dns_tasks = [resolve_dns_only("@", domain)]
     dns_tasks.extend([resolve_dns_only(sub, domain) for sub in SUBDOMAIN_LIST])
     
-    dns_results = await asyncio.gather(*dns_tasks)
+    ns_dns_results, dns_results = await asyncio.gather(
+        asyncio.gather(*ns_dns_tasks),
+        asyncio.gather(*dns_tasks)
+    )
+    
+    active_ns_hosts = [res for res in ns_dns_results if res is not None]
     active_hosts = [res for res in dns_results if res is not None]
     
-    if not active_hosts:
-        return {"results": [], "execution_time": round(time.time() - start_time, 2)}
+    if not active_hosts and not active_ns_hosts:
+        return {"results": [], "execution_time": round(time.time() - start_time, 2), "ns_records": []}
 
-    unique_ips = list(set(host["ip"] for host in active_hosts))
+    unique_ips = list(set([host["ip"] for host in active_hosts] + [host["ip"] for host in active_ns_hosts]))
     ips_to_fetch = [ip for ip in unique_ips if ip not in geo_cache]
     
     for i in range(0, len(ips_to_fetch), 15):
@@ -142,9 +173,22 @@ async def scan_subdomains(domain: str):
             "location": info["location"],
             "country_code": info["code"]
         })
+        
+    final_ns_results = []
+    for host in active_ns_hosts:
+        ip = host["ip"]
+        info = geo_cache.get(ip, {"isp": "Unknown", "location": "Unknown", "code": ""})
+        final_ns_results.append({
+            "domain": host["domain"],
+            "ip": ip,
+            "cloud_provider": get_cloud_provider(ip),
+            "service_provider": info["isp"],
+            "location": info["location"],
+            "country_code": info["code"]
+        })
     
     execution_time = round(time.time() - start_time, 2)
-    return {"results": final_results, "execution_time": execution_time}
+    return {"results": final_results, "execution_time": execution_time, "ns_records": final_ns_results}
 
 if __name__ == "__main__":
     import uvicorn
