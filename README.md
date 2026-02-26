@@ -21,6 +21,7 @@ Featuring a futuristic **Cyberpunk / Glassmorphism** interface with real-time sc
 
 ## ✨ Key Features
 
+- 🖧 **Name Server (NS) Scanning**: Automatically resolve domain Name Servers and fetch their IP, Cloud Provider, ISP, and Geo-Location.
 - 🔍 **Deep Subdomain Enumeration**: Integrated with **SecLists Top 1,000** standard dictionary.
 - ☁️ **Cloud Provider Detection**: Identify if hosts are on **AWS, GCP, Azure, Cloudflare, or Akamai**.
 - 📡 **Service Provider (ISP) Identification**: Reveal the network owner for every identified IP.
